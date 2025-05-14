@@ -20,10 +20,7 @@ public class OrderController {
     private ObjectMapper objectMapper;
 
 
-    @PostMapping(
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.TEXT_PLAIN_VALUE
-    )
+    @PostMapping
     public String process(@RequestParam("data") String dataJson) {
         try {
             // Desserializa o JSON que veio dentro de data=...
