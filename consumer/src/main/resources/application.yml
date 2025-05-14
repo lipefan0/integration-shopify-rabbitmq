@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: consumer
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+server:
+  port: ${SERVER_PORT:8081}
+
+
+shopify:
+  api:
+    url: ${SHOPIFY_API_URL:https://visiblity.myshopify.com/admin/api/2025-04/graphql.json}
+    access-token: ${SHOPIFY_API_ACCESS_TOKEN}

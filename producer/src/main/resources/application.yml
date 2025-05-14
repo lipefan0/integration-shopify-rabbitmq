@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: producer
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_USERNAME:guest}
+
+server:
+  port: ${SERVER_PORT:8080}

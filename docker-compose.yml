@@ -1,0 +1,50 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # porta AMQP
+      - "15672:15672"  # porta management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - rabbitmq_network
+
+  producer:
+    build:
+      context: ./producer
+    container_name: producer
+    depends_on:
+      - rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8080:8080"
+
+  consumer:
+    build:
+      context: ./consumer
+    container_name: consumer
+    depends_on:
+      - rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SHOPIFY_API_URL: "https://visiblity.myshopify.com/admin/api/2025-04/graphql.json"
+      SHOPIFY_API_ACCESS_TOKEN: "seu_token_de_acesso"
+    networks:
+      - rabbitmq_network
+    ports:
+      - "8081:8081"
+
+networks:
+  rabbitmq_network:
+    driver: bridge
