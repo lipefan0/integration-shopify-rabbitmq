@@ -18,28 +18,41 @@ public class OrderController {
     @Autowired private OrderService orderService;
     @Autowired private ObjectMapper objectMapper;
 
-    @PostMapping(path = "", consumes = MediaType.ALL_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(
+            path = "",
+            consumes = MediaType.ALL_VALUE,
+            produces = MediaType.TEXT_PLAIN_VALUE
+    )
     public String processRaw(@RequestBody byte[] raw) throws Exception {
-        // 1) transforma em String para inspecionar
+        // 1) Converte o corpo cru em String
         String body = new String(raw, StandardCharsets.UTF_8);
-        System.out.println("RAW BODY >>> " + body);
+        System.out.println(">>> RAW BODY:\n" + body);
 
-        // 2) se for form-urlencoded data=..., faz decode
+        // 2) Extrai o JSON dentro de data= ou assume JSON direto
         String json;
         if (body.startsWith("data=")) {
-            // url decode só o valor após "data="
+            // decodifica URL-encoding do valor após "data="
             json = URLDecoder.decode(body.substring(5), StandardCharsets.UTF_8);
         } else {
-            // assume que veio JSON puro
             json = body;
         }
-        System.out.println("DECODED JSON >>> " + json);
+        System.out.println(">>> JSON EXTRAÍDO:\n" + json);
 
-        // 3) desserializa pro seu DTO
+        // 3) Desserializa para seu DTO
         WebhookPayloadDTO payload = objectMapper.readValue(json, WebhookPayloadDTO.class);
 
-        // 4) processa como antes
-        PedidoDTO pedido = payload.getRetorno().getPedidos().get(0).getPedido();
+        // 4) Validação
+        if (payload.getRetorno() == null
+                || payload.getRetorno().getPedidos() == null
+                || payload.getRetorno().getPedidos().isEmpty()) {
+            throw new IllegalArgumentException("Payload inválido: sem pedidos");
+        }
+
+        // 5) Processa
+        PedidoDTO pedido = payload.getRetorno()
+                .getPedidos()
+                .get(0)
+                .getPedido();
         return orderService.enviarDados(pedido);
     }
 }
