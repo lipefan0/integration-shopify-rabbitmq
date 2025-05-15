@@ -24,37 +24,33 @@ public class OrderController {
     private ObjectMapper objectMapper;
 
 
-    @PostMapping
-    public String process(
-            HttpServletRequest request,
-            @RequestParam(value = "data", required = false) String dataParam,
-            @RequestBody(required = false) WebhookPayloadDTO jsonPayload
-    ) {
-        WebhookPayloadDTO payload;
-
+    @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+    produces = MediaType.TEXT_PLAIN_VALUE)
+    public String process(@RequestParam("data") String dataJson) {
         try {
-            if (dataParam != null) {
-                payload = objectMapper.readValue(dataParam, WebhookPayloadDTO.class);
+            // Desserializa o JSON contido em data=...
+            WebhookPayloadDTO payload =
+                    objectMapper.readValue(dataJson, WebhookPayloadDTO.class);
+
+            // Validações mínimas
+            if (payload.getRetorno() == null ||
+                    payload.getRetorno().getPedidos() == null ||
+                    payload.getRetorno().getPedidos().isEmpty()) {
+                throw new IllegalArgumentException("Payload inválido: sem pedidos");
             }
-            else if (jsonPayload != null) {
-                payload = jsonPayload;
-            }
-            else {
-                String body = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
-                payload = objectMapper.readValue(body, WebhookPayloadDTO.class);
-            }
+
+            PedidoDTO pedido = payload
+                    .getRetorno()
+                    .getPedidos()
+                    .get(0)
+                    .getPedido();
+
+            return orderService.enviarDados(pedido);
+
         } catch (Exception e) {
-            throw new IllegalArgumentException("Não foi possível desserializar o payload", e);
+            // Pode trocar por ResponseStatusException se preferir status 400
+            throw new IllegalArgumentException("Formato de data inválido: " + e.getMessage(), e);
         }
-
-        if (payload.getRetorno() == null
-                || payload.getRetorno().getPedidos() == null
-                || payload.getRetorno().getPedidos().isEmpty()) {
-            throw new IllegalArgumentException("Payload inválido: sem pedidos");
-        }
-
-        PedidoDTO pedido = payload.getRetorno().getPedidos().get(0).getPedido();
-        return orderService.enviarDados(pedido);
     }
 
 }
